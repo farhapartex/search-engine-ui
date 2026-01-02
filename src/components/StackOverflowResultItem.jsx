@@ -1,9 +1,35 @@
 import React from 'react';
 
 const StackOverflowResultItem = ({ result }) => {
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 30) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    } else {
+      const years = Math.floor(diffDays / 365);
+      return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+    }
+  };
+
+  const isAnswered = result.metadata?.is_answered === 'true';
+  const answerCount = result.metadata?.answer_count || '0';
+  const score = result.metadata?.score || '0';
+  const viewCount = result.metadata?.view_count || '0';
+  const tags = result.metadata?.tags ? result.metadata.tags.split(',') : [];
+
   return (
     <div className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-orange-500 hover:shadow-lg transition-all">
-      {/* Platform Badge */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
@@ -14,22 +40,27 @@ const StackOverflowResultItem = ({ result }) => {
           <span className="text-sm font-semibold text-orange-600">Stack Overflow</span>
         </div>
         <div className="flex items-center space-x-3 text-sm">
-          <div className={`flex items-center space-x-1 ${result.isAnswered ? 'text-green-600' : 'text-gray-600'}`}>
+          <div className={`flex items-center space-x-1 ${isAnswered ? 'text-green-600' : 'text-gray-600'}`}>
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
             </svg>
-            <span className="font-semibold">{result.answerCount} answers</span>
+            <span className="font-semibold">{answerCount} answers</span>
           </div>
           <div className="flex items-center space-x-1 text-gray-600">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
             </svg>
-            <span>{result.score}</span>
+            <span>{score}</span>
+          </div>
+          <div className="flex items-center space-x-1 text-gray-600">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </svg>
+            <span>{viewCount}</span>
           </div>
         </div>
       </div>
 
-      {/* Question Title */}
       <a
         href={result.url}
         target="_blank"
@@ -39,38 +70,27 @@ const StackOverflowResultItem = ({ result }) => {
         {result.title}
       </a>
 
-      {/* Question Excerpt */}
       <p className="text-gray-700 mb-4 line-clamp-2">
-        {result.excerpt}
+        {result.snippet}
       </p>
 
-      {/* Tags */}
-      <div className="flex items-center flex-wrap gap-2 mb-4">
-        {result.tags && result.tags.map((tag, index) => (
-          <span
-            key={index}
-            className="px-3 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      {/* Footer Info */}
-      <div className="flex items-center justify-between text-xs text-gray-600">
-        <div className="flex items-center space-x-4">
-          <span className="flex items-center space-x-1">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-            <span>{result.author}</span>
-          </span>
-          <span className="flex items-center space-x-1">
-            <span className="font-semibold text-orange-600">{result.reputation}</span>
-            <span>reputation</span>
-          </span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center flex-wrap gap-2">
+          {tags.map((tag, index) => (
+            <span
+              key={index}
+              className="px-3 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
-        <span>Asked {result.createdAt}</span>
+
+        {result.timestamp && (
+          <div className="text-xs text-gray-500">
+            Asked {formatDate(result.timestamp)}
+          </div>
+        )}
       </div>
     </div>
   );

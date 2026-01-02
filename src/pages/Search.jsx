@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import FilterControls from '../components/FilterControls';
 import SearchResults from '../components/SearchResults';
+import searchService from '../services/searchService';
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,6 +11,9 @@ const Search = () => {
   const [maxResults, setMaxResults] = useState(10);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const platforms = [
     { value: 'all', label: 'All Platforms', icon: '🌐' },
@@ -21,109 +25,49 @@ const Search = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     setIsSearching(true);
+    setError(null);
+    setCurrentPage(1);
 
-    console.log('Searching:', {
-      query: searchQuery,
-      platform: selectedPlatform,
-      maxResults: maxResults
-    });
+    try {
+      const platformsToSearch = selectedPlatform === 'all'
+        ? ['github', 'stackoverflow', 'reddit']
+        : [selectedPlatform];
 
-    // Mock results for demonstration
-    setTimeout(() => {
-      const mockResults = [
-        {
-          type: 'github',
-          data: {
-            fullName: 'facebook/react',
-            description: 'A declarative, efficient, and flexible JavaScript library for building user interfaces.',
-            url: 'https://github.com/facebook/react',
-            stars: '228k',
-            forks: '46.8k',
-            language: 'JavaScript',
-            topics: ['react', 'frontend', 'ui', 'declarative'],
-            updatedAt: '2 hours ago'
-          }
-        },
-        {
-          type: 'stackoverflow',
-          data: {
-            title: 'How to use React hooks effectively?',
-            excerpt: 'I am trying to understand the best practices for using React hooks in my application. What are the common patterns and anti-patterns I should be aware of?',
-            url: 'https://stackoverflow.com/questions/12345678',
-            score: 245,
-            answerCount: 12,
-            isAnswered: true,
-            tags: ['reactjs', 'javascript', 'hooks', 'react-hooks'],
-            author: 'john_doe',
-            reputation: '15.2k',
-            createdAt: '3 days ago'
-          }
-        },
-        {
-          type: 'reddit',
-          data: {
-            title: 'Just launched my first React app after 6 months of learning!',
-            subreddit: 'reactjs',
-            selfText: 'After months of learning and building small projects, I finally deployed my first production React application. It\'s a task management app with real-time updates. Thank you to this amazing community for all the help!',
-            url: 'https://reddit.com/r/reactjs/comments/abc123',
-            score: 1247,
-            commentCount: 89,
-            author: 'developer123',
-            awards: 5,
-            flair: 'Project',
-            upvoteRatio: 0.95,
-            createdAt: '5 hours ago'
-          }
-        },
-        {
-          type: 'github',
-          data: {
-            fullName: 'vercel/next.js',
-            description: 'The React Framework for Production - with server-side rendering and static site generation.',
-            url: 'https://github.com/vercel/next.js',
-            stars: '125k',
-            forks: '26.8k',
-            language: 'TypeScript',
-            topics: ['nextjs', 'react', 'ssr', 'framework'],
-            updatedAt: '1 hour ago'
-          }
-        },
-        {
-          type: 'stackoverflow',
-          data: {
-            title: 'Difference between useMemo and useCallback?',
-            excerpt: 'Can someone explain the practical difference between useMemo and useCallback hooks in React? When should I use one over the other?',
-            url: 'https://stackoverflow.com/questions/98765432',
-            score: 567,
-            answerCount: 8,
-            isAnswered: true,
-            tags: ['reactjs', 'performance', 'hooks', 'memoization'],
-            author: 'react_learner',
-            reputation: '8.9k',
-            createdAt: '1 week ago'
-          }
-        },
-        {
-          type: 'reddit',
-          data: {
-            title: 'React 19 Beta is out! Major changes coming',
-            subreddit: 'programming',
-            selfText: 'React team just announced React 19 beta with some game-changing features including the new Compiler and improved Server Components support.',
-            url: 'https://reddit.com/r/programming/comments/xyz789',
-            score: 2891,
-            commentCount: 234,
-            author: 'tech_news',
-            awards: 12,
-            flair: 'News',
-            upvoteRatio: 0.92,
-            createdAt: '1 day ago'
-          }
-        }
-      ];
+      // console.log('Searching:', {
+      //   query: searchQuery,
+      //   platforms: platformsToSearch,
+      //   maxResults: maxResults
+      // });
 
-      setSearchResults(mockResults);
+      const response = await searchService.search({
+        query: searchQuery,
+        platforms: platformsToSearch,
+        maxResults: maxResults
+      });
+
+      if (response && response.data && response.data.results) {
+        setSearchResults(response.data.results);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (err) {
+      console.error('Search Error:', err);
+      setError(err.response?.data?.message || 'An error occurred while searching. Please try again.');
+      setSearchResults([]);
+    } finally {
       setIsSearching(false);
-    }, 1000);
+    }
+  };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(searchResults.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedResults = searchResults.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -148,10 +92,44 @@ const Search = () => {
           />
         </form>
 
-        <SearchResults
-          searchResults={searchResults}
-          searchQuery={searchQuery}
-        />
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h4 className="text-red-800 font-semibold">Search Failed</h4>
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isSearching && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-blue-200 rounded-full"></div>
+              <div className="w-20 h-20 border-4 border-blue-600 rounded-full animate-spin border-t-transparent absolute top-0 left-0"></div>
+            </div>
+            <p className="mt-6 text-gray-600 text-lg font-medium">Searching across platforms...</p>
+            <p className="mt-2 text-gray-500 text-sm">This may take a few moments</p>
+          </div>
+        )}
+
+        {/* Search Results */}
+        {!isSearching && (
+          <SearchResults
+            searchResults={paginatedResults}
+            searchQuery={searchQuery}
+            totalResults={searchResults.length}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
       </main>
     </div>
   );

@@ -1,9 +1,29 @@
 import React from 'react';
 
 const GitHubResultItem = ({ result }) => {
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 30) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    } else {
+      const years = Math.floor(diffDays / 365);
+      return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+    }
+  };
+
   return (
     <div className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-gray-900 hover:shadow-lg transition-all">
-      {/* Platform Badge */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
@@ -18,53 +38,53 @@ const GitHubResultItem = ({ result }) => {
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
             </svg>
-            <span>{result.stars}</span>
+            <span>{result.metadata?.stars || 0}</span>
           </div>
           <div className="flex items-center space-x-1">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
             </svg>
-            <span>{result.forks}</span>
+            <span>{result.metadata?.forks || 0}</span>
           </div>
+          {result.metadata?.open_issues && (
+            <div className="flex items-center space-x-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </svg>
+              <span>{result.metadata.open_issues}</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Repository Name */}
       <a
         href={result.url}
         target="_blank"
         rel="noopener noreferrer"
         className="text-xl font-bold text-blue-600 hover:text-blue-800 mb-2 block"
       >
-        {result.fullName}
+        {result.title}
       </a>
 
-      {/* Description */}
       <p className="text-gray-700 mb-4 line-clamp-2">
-        {result.description}
+        {result.snippet}
       </p>
 
-      {/* Language and Topics */}
-      <div className="flex items-center flex-wrap gap-2">
-        {result.language && (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <span className="w-2 h-2 rounded-full bg-blue-600 mr-2"></span>
-            {result.language}
-          </span>
-        )}
-        {result.topics && result.topics.slice(0, 3).map((topic, index) => (
-          <span
-            key={index}
-            className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
-          >
-            {topic}
-          </span>
-        ))}
-      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center flex-wrap gap-2">
+          {result.metadata?.language && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <span className="w-2 h-2 rounded-full bg-blue-600 mr-2"></span>
+              {result.metadata.language}
+            </span>
+          )}
+        </div>
 
-      {/* Updated Date */}
-      <div className="mt-4 text-xs text-gray-500">
-        Updated {result.updatedAt}
+        {result.timestamp && (
+          <div className="text-xs text-gray-500">
+            Updated {formatDate(result.timestamp)}
+          </div>
+        )}
       </div>
     </div>
   );

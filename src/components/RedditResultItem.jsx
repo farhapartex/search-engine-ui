@@ -1,9 +1,35 @@
 import React from 'react';
 
 const RedditResultItem = ({ result }) => {
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 30) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    } else {
+      const years = Math.floor(diffDays / 365);
+      return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+    }
+  };
+
+  const score = result.metadata?.score || '0';
+  const numComments = result.metadata?.num_comments || '0';
+  const subreddit = result.metadata?.subreddit || '';
+  const author = result.metadata?.author || '';
+  const upvoteRatio = result.metadata?.upvote_ratio ? parseFloat(result.metadata.upvote_ratio) : 0;
+
   return (
     <div className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-orange-600 hover:shadow-lg transition-all">
-      {/* Platform Badge */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
@@ -18,30 +44,30 @@ const RedditResultItem = ({ result }) => {
             <svg className="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
-            <span className="font-semibold">{result.score}</span>
+            <span className="font-semibold">{score}</span>
           </div>
           <div className="flex items-center space-x-1">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
             </svg>
-            <span>{result.commentCount}</span>
+            <span>{numComments}</span>
           </div>
         </div>
       </div>
 
-      {/* Subreddit */}
-      <div className="mb-2">
-        <a
-          href={`https://reddit.com/r/${result.subreddit}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition"
-        >
-          r/{result.subreddit}
-        </a>
-      </div>
+      {subreddit && (
+        <div className="mb-2">
+          <a
+            href={`https://reddit.com/r/${subreddit}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition"
+          >
+            r/{subreddit}
+          </a>
+        </div>
+      )}
 
-      {/* Post Title */}
       <a
         href={result.url}
         target="_blank"
@@ -51,50 +77,38 @@ const RedditResultItem = ({ result }) => {
         {result.title}
       </a>
 
-      {/* Post Content/Excerpt */}
-      {result.selfText && (
+      {result.snippet && (
         <p className="text-gray-700 mb-4 line-clamp-3">
-          {result.selfText}
+          {result.snippet}
         </p>
       )}
 
-      {/* Flair */}
-      {result.flair && (
-        <div className="mb-4">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-            {result.flair}
-          </span>
-        </div>
-      )}
-
-      {/* Footer Info */}
       <div className="flex items-center justify-between text-xs text-gray-600">
         <div className="flex items-center space-x-4">
-          <span className="flex items-center space-x-1">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-            <span>u/{result.author}</span>
-          </span>
-          <span className="flex items-center space-x-1">
-            <span className="font-semibold">{result.awards}</span>
-            <span>awards</span>
-          </span>
+          {author && (
+            <span className="flex items-center space-x-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+              <span>u/{author}</span>
+            </span>
+          )}
         </div>
-        <span>Posted {result.createdAt}</span>
+        {result.timestamp && (
+          <span>Posted {formatDate(result.timestamp)}</span>
+        )}
       </div>
 
-      {/* Upvote Percentage */}
-      {result.upvoteRatio && (
+      {upvoteRatio > 0 && (
         <div className="mt-3 flex items-center space-x-2">
           <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
             <div
               className="bg-orange-600 h-full rounded-full"
-              style={{ width: `${result.upvoteRatio * 100}%` }}
+              style={{ width: `${upvoteRatio * 100}%` }}
             ></div>
           </div>
           <span className="text-xs text-gray-600 font-semibold">
-            {Math.round(result.upvoteRatio * 100)}% upvoted
+            {Math.round(upvoteRatio * 100)}% upvoted
           </span>
         </div>
       )}
