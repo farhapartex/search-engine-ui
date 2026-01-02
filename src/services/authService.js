@@ -5,7 +5,7 @@ const authService = {
 
   signUp: async (userData) => {
     try {
-      const response = await axiosInstance.post('/user/signup', {
+      const response = await axiosInstance.post('/user/signup/', {
         name: userData.name,
         email: userData.email,
         password: userData.password,
@@ -24,14 +24,13 @@ const authService = {
 
   signIn: async (credentials) => {
     try {
-      const response = await axiosInstance.post('/user/signin', {
+      const response = await axiosInstance.post('/user/signin/', {
         email: credentials.email,
         password: credentials.password,
       });
 
-      // Save token to localStorage
-      if (response.data.token) {
-        localStorage.setItem('fd_search_engine_token', response.data.token);
+      if (response.data.success && response.data.data.access_token) {
+        localStorage.setItem('fd_search_engine_token', response.data.data.access_token);
       }
 
       return response.data;
