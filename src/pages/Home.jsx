@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchQuery);
-    // TODO: Implement search functionality
+    if (searchQuery.trim()) {
+      navigate('/search');
+    }
+  };
+
+  const handleLuckySearch = () => {
+    navigate('/search');
   };
 
   return (
@@ -83,6 +89,7 @@ const Home = () => {
               </button>
               <button
                 type="button"
+                onClick={handleLuckySearch}
                 className="bg-white text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition shadow-md border border-gray-300"
               >
                 I'm Feeling Lucky
