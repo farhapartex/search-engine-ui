@@ -15,9 +15,9 @@ const searchService = {
   },
 
 
-  getSearchHistory: async () => {
+  getSearchHistory: async (limit) => {
     try {
-      const response = await axiosInstance.get('/search/history');
+      const response = await axiosInstance.get(`/engine/search/histories/?limit=${limit}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -37,7 +37,7 @@ const searchService = {
 
   deleteSearchHistory: async (searchId) => {
     try {
-      const response = await axiosInstance.delete(`/search/history/${searchId}`);
+      const response = await axiosInstance.delete(`/engine/search/history/${searchId}`);
       return response.data;
     } catch (error) {
       throw error;

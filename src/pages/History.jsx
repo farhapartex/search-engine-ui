@@ -9,6 +9,8 @@ const History = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const historyDefaultLimit = 50;
+
   useEffect(() => {
     fetchHistory();
   }, []);
@@ -17,14 +19,13 @@ const History = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await searchService.getSearchHistory();
+      const response = await searchService.getSearchHistory(historyDefaultLimit);
       if (response.success && response.data) {
-        setHistory(response.data);
+        setHistory(response.data.histories);
       } else {
         setHistory([]);
       }
     } catch (err) {
-      console.error('Failed to fetch history:', err);
       setError(err.response?.data?.message || 'Failed to load search history');
       setHistory([]);
     } finally {
